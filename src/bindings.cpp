@@ -163,6 +163,7 @@ PYBIND11_MODULE(bindings, dpa) {
             .value("PROGRESS_DECREASE_DENIED", PathSync::PROGRESS_DECREASE_DENIED)
             .value("PROGRESS_EXCEED_PATH_SIZE", PathSync::PROGRESS_EXCEED_PATH_SIZE)
             .value("PROGRESS_MIN_EXCEED_MAX", PathSync::PROGRESS_MIN_EXCEED_MAX)
+            .value("PROGRESS_RANGE_CONFLICT", PathSync::PROGRESS_RANGE_CONFLICT)
             .export_values();
 
     py::class_<PathSync::PathInfo>(path_sync, "PathInfo")
