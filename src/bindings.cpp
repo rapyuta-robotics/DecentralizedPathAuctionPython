@@ -6,6 +6,8 @@
 #include <pybind11/functional.h>
 #include <pybind11/stl_bind.h>
 
+#include <sstream>
+
 namespace py = pybind11;
 using namespace pybind11::literals;
 using namespace decentralized_path_auction;
@@ -14,10 +16,40 @@ PYBIND11_MAKE_OPAQUE(Nodes);
 PYBIND11_MAKE_OPAQUE(Path);
 PYBIND11_MAKE_OPAQUE(PathSync::Paths);
 
+std::ostream& operator << (std::ostream &os, const Point &p) {
+    return os << '(' << p.get<0>() << ", " << p.get<1>() << ", " << p.get<2>() << ")";
+}
+
+std::ostream& operator << (std::ostream &os, const Path &p) {
+    os << '{' << std::endl;
+    for (int i = 0; i < p.size(); ++i) {
+        os << "  " << i << ": " << p[i].node->position << "\t\tp " << p[i].price << "\t\td " << p[i].duration << std::endl;
+    }
+    return os << '}';
+}
+
+std::ostream& operator << (std::ostream &os, const PathSync::Paths &paths) {
+    for (const auto& [agent_id, info] : paths) {
+        os << "aid " << agent_id << " pid " << info.path_id << "\t\tlen " << info.path.size() << "\t\tprog " << info.progress_min << " -> " << info.progress_max << '\t' << info.path << std::endl;
+    }
+    return os;
+}
+
+std::ostream& operator << (std::ostream &os, const PathSync &p) {
+    return os << p.getPaths();
+}
+
+template <class T>
+std::string to_string(const T& t) {
+    std::ostringstream os;
+    os << t;
+    return os.str();
+}
+
 PYBIND11_MODULE(bindings, dpa) {
     py::bind_vector<Nodes>(dpa, "Nodes");
-    py::bind_vector<Path>(dpa, "Path");
-    py::bind_map<PathSync::Paths>(dpa, "Paths");
+    py::bind_vector<Path>(dpa, "Path").def("__str__", &to_string<Path>);
+    py::bind_map<PathSync::Paths>(dpa, "Paths").def("__str__", &to_string<PathSync::Paths>);
 
     // Point
     py::class_<Point> point(dpa, "Point");
@@ -28,6 +60,8 @@ PYBIND11_MODULE(bindings, dpa) {
     point.def_property("z", &Point::get<2>, &Point::set<2>);
     point.def("tup",
             [](const Point& p) { return std::make_tuple(p.get<0>(), p.get<1>(), p.get<2>()); });
+    point.def("__str__", &to_string<Point>);
+
 
     // Node
     py::class_<Node, NodePtr> node(dpa, "Node");
@@ -189,4 +223,5 @@ PYBIND11_MODULE(bindings, dpa) {
     path_sync.def("clearPaths", &PathSync::clearPaths);
     path_sync.def("getPaths", &PathSync::getPaths, py::return_value_policy::reference);
     path_sync.def("checkWaitStatus", &PathSync::checkWaitStatus, "agent_id"_a);
+    path_sync.def("__str__", &to_string<PathSync>);
 }
