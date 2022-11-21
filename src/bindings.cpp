@@ -7,6 +7,7 @@
 #include <pybind11/stl_bind.h>
 
 #include <sstream>
+#include <iomanip>
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -16,27 +17,38 @@ PYBIND11_MAKE_OPAQUE(Nodes);
 PYBIND11_MAKE_OPAQUE(Path);
 PYBIND11_MAKE_OPAQUE(PathSync::Paths);
 
-std::ostream& operator << (std::ostream &os, const Point &p) {
+std::ostream& operator<<(std::ostream& os, const Point& p) {
     return os << '(' << p.get<0>() << ", " << p.get<1>() << ", " << p.get<2>() << ")";
 }
 
-std::ostream& operator << (std::ostream &os, const Path &p) {
+std::ostream& operator<<(std::ostream& os, const PathSync::WaitStatus& w) {
+    return os << "{ error: " << w.error << ", blocked_progress: " << w.blocked_progress
+              << ", remaining_duration: " << w.remaining_duration << " }";
+}
+
+std::ostream& operator<<(std::ostream& os, const Path& p) {
     os << '{' << std::endl;
     for (int i = 0; i < p.size(); ++i) {
-        os << "  " << i << ": " << p[i].node->position << "\t\tp " << p[i].price << "\t\td " << p[i].duration << std::endl;
+        os << "  " << i << ": " << p[i].node->position << "    p " << std::setw(11) << p[i].price << "    d "
+           << p[i].duration << std::endl;
     }
     return os << '}';
 }
 
-std::ostream& operator << (std::ostream &os, const PathSync::Paths &paths) {
-    for (const auto& [agent_id, info] : paths) {
-        os << "aid " << agent_id << " pid " << info.path_id << "\t\tlen " << info.path.size() << "\t\tprog " << info.progress_min << " -> " << info.progress_max << '\t' << info.path << std::endl;
+std::ostream& operator<<(std::ostream& os, const PathSync& p) {
+    for (const auto& [agent_id, info] : p.getPaths()) {
+        auto wait_status = p.checkWaitStatus(agent_id);
+        os << agent_id << "    pid " << info.path_id << "    len " << info.path.size() << "    prog "
+           << info.progress_min << " => " << info.progress_max;
+
+        if (wait_status.blocked_progress < info.path.size()) {
+            os << "    blocked by "
+               << info.path[wait_status.blocked_progress].node->auction.getHighestBid()->second.bidder;
+        }
+
+        os << std::endl << wait_status << "    " << info.path << std::endl;
     }
     return os;
-}
-
-std::ostream& operator << (std::ostream &os, const PathSync &p) {
-    return os << p.getPaths();
 }
 
 template <class T>
@@ -49,19 +61,16 @@ std::string to_string(const T& t) {
 PYBIND11_MODULE(bindings, dpa) {
     py::bind_vector<Nodes>(dpa, "Nodes");
     py::bind_vector<Path>(dpa, "Path").def("__str__", &to_string<Path>);
-    py::bind_map<PathSync::Paths>(dpa, "Paths").def("__str__", &to_string<PathSync::Paths>);
+    py::bind_map<PathSync::Paths>(dpa, "Paths");
 
     // Point
     py::class_<Point> point(dpa, "Point");
-    point.def(
-            py::init<float const&, float const&, float const&>(), "x"_a = 0, "y"_a = 0, "z"_a = 0);
+    point.def(py::init<float const&, float const&, float const&>(), "x"_a = 0, "y"_a = 0, "z"_a = 0);
     point.def_property("x", &Point::get<0>, &Point::set<0>);
     point.def_property("y", &Point::get<1>, &Point::set<1>);
     point.def_property("z", &Point::get<2>, &Point::set<2>);
-    point.def("tup",
-            [](const Point& p) { return std::make_tuple(p.get<0>(), p.get<1>(), p.get<2>()); });
+    point.def("tup", [](const Point& p) { return std::make_tuple(p.get<0>(), p.get<1>(), p.get<2>()); });
     point.def("__str__", &to_string<Point>);
-
 
     // Node
     py::class_<Node, NodePtr> node(dpa, "Node");
@@ -73,20 +82,20 @@ PYBIND11_MODULE(bindings, dpa) {
     state.value("DISABLED", Node::DISABLED);
     state.value("DELETED", Node::DELETED);
     state.export_values();
-    node.def(py::init<Point, Node::State, Nodes>(), "position"_a, "state"_a = Node::DEFAULT,
-            "edges"_a = Nodes());
+    node.def(py::init<Point, Node::State, Nodes>(), "position"_a, "state"_a = Node::DEFAULT, "edges"_a = Nodes());
     node.def_readonly("position", &Node::position);
     node.def_readwrite("state", &Node::state);
     node.def_readwrite("edges", &Node::edges);
     // node.def_readwrite("auction", &Node::auction);
-    node.def_property("custom_data", [](const Node& node) -> size_t { return (size_t)node.custom_data; },
-            [](Node& node, size_t val) { *(size_t*)(&node.custom_data) = val; });
+    node.def_property(
+            "custom_data", [](const Node& node) -> size_t { return (size_t) node.custom_data; },
+            [](Node& node, size_t val) { *(size_t*) (&node.custom_data) = val; });
     // node.def("validate", &Node::validate);
 
     // Visit
     py::class_<Visit> visit(dpa, "Visit");
-    visit.def(py::init<NodePtr, float, float, float, float, float>(), "node"_a, "price"_a = 0,
-            "duration"_a = 0, "base_price"_a = 0, "cost_estimate"_a = 0, "time_estimate"_a = 0);
+    visit.def(py::init<NodePtr, float, float, float, float, float>(), "node"_a, "price"_a = 0, "duration"_a = 0,
+            "base_price"_a = 0, "cost_estimate"_a = 0, "time_estimate"_a = 0);
     visit.def_readwrite("node", &Visit::node);
     visit.def_readwrite("price", &Visit::price);
     visit.def_readwrite("duration", &Visit::duration);
@@ -135,10 +144,8 @@ PYBIND11_MODULE(bindings, dpa) {
             .value("SOURCE_NODE_PRICE_INFINITE", PathSearch::SOURCE_NODE_PRICE_INFINITE)
             .value("CONFIG_AGENT_ID_EMPTY", PathSearch::CONFIG_AGENT_ID_EMPTY)
             .value("CONFIG_COST_LIMIT_NON_POSITIVE", PathSearch::CONFIG_COST_LIMIT_NON_POSITIVE)
-            .value("CONFIG_PRICE_INCREMENT_NON_POSITIVE",
-                    PathSearch::CONFIG_PRICE_INCREMENT_NON_POSITIVE)
-            .value("CONFIG_TIME_EXCHANGE_RATE_NON_POSITIVE",
-                    PathSearch::CONFIG_TIME_EXCHANGE_RATE_NON_POSITIVE)
+            .value("CONFIG_PRICE_INCREMENT_NON_POSITIVE", PathSearch::CONFIG_PRICE_INCREMENT_NON_POSITIVE)
+            .value("CONFIG_TIME_EXCHANGE_RATE_NON_POSITIVE", PathSearch::CONFIG_TIME_EXCHANGE_RATE_NON_POSITIVE)
             .value("CONFIG_TRAVEL_TIME_MISSING", PathSearch::CONFIG_TRAVEL_TIME_MISSING)
             .export_values();
 
@@ -148,9 +155,8 @@ PYBIND11_MODULE(bindings, dpa) {
             .def_readwrite("price_increment", &PathSearch::Config::price_increment)
             .def_readwrite("time_exchange_rate", &PathSearch::Config::time_exchange_rate)
             .def_readwrite("travel_time", &PathSearch::Config::travel_time)
-            .def(py::init<std::string, float, float, float, PathSearch::TravelTime>(),
-                    "agent_id"_a, "cost_limit"_a = FLT_MAX, "price_increment"_a = 1,
-                    "time_exchange_rate"_a = 1,
+            .def(py::init<std::string, float, float, float, PathSearch::TravelTime>(), "agent_id"_a,
+                    "cost_limit"_a = FLT_MAX, "price_increment"_a = 1, "time_exchange_rate"_a = 1,
                     "travel_time"_a = PathSearch::TravelTime(PathSearch::travelDistance))
             .def("validate", &PathSearch::Config::validate);
 
@@ -159,17 +165,14 @@ PYBIND11_MODULE(bindings, dpa) {
             py::return_value_policy::reference);
 
     path_search.def("getDestinations", &PathSearch::getDestinations);
-    path_search.def("setDestinations", &PathSearch::setDestinations, "destinations"_a,
-            "duration"_a = FLT_MAX);
+    path_search.def("setDestinations", &PathSearch::setDestinations, "destinations"_a, "duration"_a = FLT_MAX);
 
     path_search.def("selectSource", &PathSearch::selectSource, "sources"_a);
-    path_search.def("iterate",
-            static_cast<PathSearch::Error (PathSearch::*)(Path&, size_t)>(&PathSearch::iterate),
+    path_search.def("iterate", static_cast<PathSearch::Error (PathSearch::*)(Path&, size_t)>(&PathSearch::iterate),
             "path"_a, "iterations"_a = 0);
     path_search.def("iterate",
-            static_cast<PathSearch::Error (PathSearch::*)(Path&, size_t, float)>(
-                    &PathSearch::iterate),
-            "path"_a, "iterations"_a, "fallback_cost"_a);
+            static_cast<PathSearch::Error (PathSearch::*)(Path&, size_t, float)>(&PathSearch::iterate), "path"_a,
+            "iterations"_a, "fallback_cost"_a);
     path_search.def("resetCostEstimates", &PathSearch::resetCostEstimates);
 
     // PathSync
@@ -184,8 +187,7 @@ PYBIND11_MODULE(bindings, dpa) {
             .value("VISIT_NODE_DISABLED", PathSync::VISIT_NODE_DISABLED)
             .value("VISIT_DURATION_NEGATIVE", PathSync::VISIT_DURATION_NEGATIVE)
             .value("VISIT_PRICE_ALREADY_EXIST", PathSync::VISIT_PRICE_ALREADY_EXIST)
-            .value("VISIT_PRICE_LESS_THAN_START_PRICE",
-                    PathSync::VISIT_PRICE_LESS_THAN_START_PRICE)
+            .value("VISIT_PRICE_LESS_THAN_START_PRICE", PathSync::VISIT_PRICE_LESS_THAN_START_PRICE)
             .value("VISIT_BID_ALREADY_REMOVED", PathSync::VISIT_BID_ALREADY_REMOVED)
             .value("PATH_EMPTY", PathSync::PATH_EMPTY)
             .value("PATH_VISIT_DUPLICATED", PathSync::PATH_VISIT_DUPLICATED)
@@ -205,20 +207,19 @@ PYBIND11_MODULE(bindings, dpa) {
             .def_readwrite("path_id", &PathSync::PathInfo::path_id)
             .def_readwrite("progress_min", &PathSync::PathInfo::progress_min)
             .def_readwrite("progress_max", &PathSync::PathInfo::progress_max)
-            .def(py::init<Path, size_t, size_t, size_t>(), "path"_a, "path_id"_a = 0,
-                    "progress_min"_a = 0, "progress_max"_a = 0);
+            .def(py::init<Path, size_t, size_t, size_t>(), "path"_a, "path_id"_a = 0, "progress_min"_a = 0,
+                    "progress_max"_a = 0);
 
     py::class_<PathSync::WaitStatus>(path_sync, "WaitStatus")
             .def_readwrite("error", &PathSync::WaitStatus::error)
             .def_readwrite("blocked_progress", &PathSync::WaitStatus::blocked_progress)
             .def_readwrite("remaining_duration", &PathSync::WaitStatus::remaining_duration)
-            .def(py::init<PathSync::Error, size_t, float>(), "error"_a, "blocked_progress"_a,
-                    "remaining_duration"_a);
+            .def(py::init<PathSync::Error, size_t, float>(), "error"_a, "blocked_progress"_a, "remaining_duration"_a);
 
     path_sync.def(py::init<>());
     path_sync.def("updatePath", &PathSync::updatePath, "agent_id"_a, "path"_a, "path_id"_a);
-    path_sync.def("updateProgress", &PathSync::updateProgress, "agent_id"_a, "progress_min"_a,
-            "progress_max"_a, "path_id"_a);
+    path_sync.def(
+            "updateProgress", &PathSync::updateProgress, "agent_id"_a, "progress_min"_a, "progress_max"_a, "path_id"_a);
     path_sync.def("removePath", &PathSync::removePath, "agent_id"_a);
     path_sync.def("clearPaths", &PathSync::clearPaths);
     path_sync.def("getPaths", &PathSync::getPaths, py::return_value_policy::reference);
