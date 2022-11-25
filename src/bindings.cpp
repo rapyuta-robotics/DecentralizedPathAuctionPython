@@ -50,7 +50,7 @@ std::ostream& operator<<(std::ostream& os, const PathProgress& p) {
 }
 
 std::ostream& operator<<(std::ostream& os, const Path& p) {
-    return os << PathProgress{p, 0, p.size()};
+    return os << PathProgress{p, 0, 0, p.size()};
 }
 
 std::ostream& operator<<(std::ostream& os, const PathSync& p) {
