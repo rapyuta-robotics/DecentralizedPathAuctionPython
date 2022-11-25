@@ -26,27 +26,63 @@ std::ostream& operator<<(std::ostream& os, const PathSync::WaitStatus& w) {
               << ", remaining_duration: " << w.remaining_duration << " }";
 }
 
-std::ostream& operator<<(std::ostream& os, const Path& p) {
+struct PathProgress {
+    const Path& path;
+    size_t progress_min;
+    size_t progress_max;
+    size_t blocked_progress;
+};
+
+std::ostream& operator<<(std::ostream& os, const PathProgress& p) {
     os << '{' << std::endl;
-    for (int i = 0; i < p.size(); ++i) {
-        os << "  " << i << ": " << p[i].node->position << "    p " << std::setw(11) << p[i].price << "    d "
-           << p[i].duration << std::endl;
+    for (int i = 0; i < p.path.size(); ++i) {
+        if (i == p.blocked_progress) {
+            os << "# ";
+        } else if (i >= p.progress_min && i <= p.progress_max) {
+            os << "> ";
+        } else {
+            os << "  ";
+        }
+        os << i << ": " << p.path[i].node->position << "    p " << std::setw(11) << p.path[i].price << "    d "
+           << p.path[i].duration << std::endl;
     }
     return os << '}';
+}
+
+std::ostream& operator<<(std::ostream& os, const Path& p) {
+    return os << PathProgress{p, 0, p.size()};
 }
 
 std::ostream& operator<<(std::ostream& os, const PathSync& p) {
     for (const auto& [agent_id, info] : p.getPaths()) {
         auto wait_status = p.checkWaitStatus(agent_id);
-        os << agent_id << "    pid " << info.path_id << "    len " << info.path.size() << "    prog "
-           << info.progress_min << " => " << info.progress_max;
+        os << agent_id << "    pid " << info.path_id << "    len " << info.path.size();
 
         if (wait_status.blocked_progress < info.path.size()) {
-            os << "    blocked by "
-               << info.path[wait_status.blocked_progress].node->auction.getHighestBid()->second.bidder;
+            auto& auction = info.path[wait_status.blocked_progress].node->auction;
+            auto blocked_by = &auction.getHighestBid()->second.bidder;
+
+            for (auto& [price, bid] : auction.getBids()) {
+                if (bid.bidder.empty()) {
+                    continue;
+                }
+                auto& other_info = p.getPaths().at(bid.bidder);
+                if (agent_id != bid.bidder && other_info.progress_min == other_info.progress_max &&
+                        info.path[wait_status.blocked_progress].node == other_info.path[other_info.progress_min].node) {
+                    blocked_by = &bid.bidder;
+                }
+            }
+
+            os << "    blocked by " << *blocked_by;
+
+            if (size_t visits_until_block = wait_status.blocked_progress - info.progress_max - 1) {
+                os << " in " << visits_until_block;
+            }
         }
 
-        os << std::endl << wait_status << "    " << info.path << std::endl;
+        os << std::endl
+           << wait_status << "    "
+           << PathProgress{info.path, info.progress_min, info.progress_max, wait_status.blocked_progress} << std::endl;
     }
     return os;
 }
@@ -59,6 +95,10 @@ std::string to_string(const T& t) {
 }
 
 PYBIND11_MODULE(bindings, dpa) {
+    // Constants
+    dpa.attr("FLT_MAX") = FLT_MAX;
+
+    // container bindings
     py::bind_vector<Nodes>(dpa, "Nodes");
     py::bind_vector<Path>(dpa, "Path").def("__str__", &to_string<Path>);
     py::bind_map<PathSync::Paths>(dpa, "Paths");
@@ -214,8 +254,8 @@ PYBIND11_MODULE(bindings, dpa) {
             .def_readwrite("error", &PathSync::WaitStatus::error)
             .def_readwrite("blocked_progress", &PathSync::WaitStatus::blocked_progress)
             .def_readwrite("remaining_duration", &PathSync::WaitStatus::remaining_duration)
-            .def(py::init<PathSync::Error, size_t, float>(), "error"_a, "blocked_progress"_a, "remaining_duration"_a);
-
+            .def(py::init<PathSync::Error, size_t, float>(), "error"_a, "blocked_progress"_a, "remaining_duration"_a)
+            .def("__str__", &to_string<PathSync::WaitStatus>);
     path_sync.def(py::init<>());
     path_sync.def("updatePath", &PathSync::updatePath, "agent_id"_a, "path"_a, "path_id"_a);
     path_sync.def(
