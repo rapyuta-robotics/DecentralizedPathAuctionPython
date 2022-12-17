@@ -36,10 +36,7 @@ def test_graph():
         assert graph.findNode(pos).position.tup() == pos.tup()
 
         pos_offset = Point(i, 10, 0)
-        assert (
-            graph.findNearestNode(pos_offset, Node.State.DEFAULT).position.tup()
-            == pos.tup()
-        )
+        assert graph.findNearestNode(pos_offset, Node.State.DEFAULT).position.tup() == pos.tup()
 
         assert graph.removeNode(pos)
         assert not graph.findNode(pos)
