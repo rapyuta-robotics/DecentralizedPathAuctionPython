@@ -43,8 +43,8 @@ std::ostream& operator<<(std::ostream& os, const PathProgress& p) {
         } else {
             os << "  ";
         }
-        os << i << ": " << p.path[i].node->position << "    p " << std::setw(11) << p.path[i].price << "    d "
-           << p.path[i].duration << std::endl;
+        os << i << ": " << p.path[i].node->position << " S" << p.path[i].node->state << "    p " << std::setw(11)
+           << p.path[i].price << "    d " << p.path[i].duration << std::endl;
     }
     return os << '}';
 }
@@ -59,21 +59,7 @@ std::ostream& operator<<(std::ostream& os, const PathSync& p) {
         os << agent_id << "    pid " << info.path_id << "    len " << info.path.size();
 
         if (wait_status.blocked_progress < info.path.size()) {
-            auto& auction = info.path[wait_status.blocked_progress].node->auction;
-            auto blocked_by = &auction.getHighestBid()->second.bidder;
-
-            for (auto& [price, bid] : auction.getBids()) {
-                if (bid.bidder.empty()) {
-                    continue;
-                }
-                auto& other_info = p.getPaths().at(bid.bidder);
-                if (agent_id != bid.bidder && other_info.progress_min == other_info.progress_max &&
-                        info.path[wait_status.blocked_progress].node == other_info.path[other_info.progress_min].node) {
-                    blocked_by = &bid.bidder;
-                }
-            }
-
-            os << "    blocked by " << *blocked_by;
+            os << "    blocked by " << wait_status.blocked_by;
 
             if (size_t visits_until_block = wait_status.blocked_progress - info.progress_max - 1) {
                 os << " in " << visits_until_block;
@@ -253,8 +239,8 @@ PYBIND11_MODULE(bindings, dpa) {
     py::class_<PathSync::WaitStatus>(path_sync, "WaitStatus")
             .def_readwrite("error", &PathSync::WaitStatus::error)
             .def_readwrite("blocked_progress", &PathSync::WaitStatus::blocked_progress)
+            .def_readwrite("blocked_by", &PathSync::WaitStatus::blocked_by)
             .def_readwrite("remaining_duration", &PathSync::WaitStatus::remaining_duration)
-            .def(py::init<PathSync::Error, size_t, float>(), "error"_a, "blocked_progress"_a, "remaining_duration"_a)
             .def("__str__", &to_string<PathSync::WaitStatus>);
     path_sync.def(py::init<>());
     path_sync.def("updatePath", &PathSync::updatePath, "agent_id"_a, "path"_a, "path_id"_a);
