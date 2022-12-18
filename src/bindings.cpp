@@ -58,7 +58,10 @@ std::ostream& operator<<(std::ostream& os, const PathSync& p) {
         auto wait_status = p.checkWaitStatus(agent_id);
         os << agent_id << "    pid " << info.path_id << "    len " << info.path.size();
 
-        if (wait_status.blocked_progress < info.path.size()) {
+        if (wait_status.error == PathSync::SOURCE_NODE_OUTBID) {
+            os << "    source outbid by " << wait_status.blocked_by;
+        } else if (wait_status.blocked_progress > info.progress_min &&
+                   wait_status.blocked_progress < info.path.size()) {
             os << "    blocked by " << wait_status.blocked_by;
 
             if (size_t visits_until_block = wait_status.blocked_progress - info.progress_max - 1) {
