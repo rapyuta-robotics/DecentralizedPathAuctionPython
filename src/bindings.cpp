@@ -62,8 +62,9 @@ std::ostream& operator<<(std::ostream& os, const PathSync& p) {
             os << "    source outbid by " << wait_status.blocked_by;
         } else if (!wait_status.blocked_by.empty()) {
             os << "    blocked by " << wait_status.blocked_by;
-            if (size_t visits_until_block = wait_status.blocked_progress - info.progress_max - 1) {
-                os << " in " << visits_until_block;
+            size_t visits_until_block = wait_status.blocked_progress - info.progress_max;
+            if (visits_until_block > 1) {
+                os << " in " << visits_until_block - 1;
             }
         }
 
