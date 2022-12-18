@@ -106,7 +106,6 @@ PYBIND11_MODULE(bindings, dpa) {
     py::enum_<Node::State> state(node, "State");
     state.value("DEFAULT", Node::DEFAULT);
     state.value("NO_FALLBACK", Node::NO_FALLBACK);
-    state.value("NO_PARKING", Node::NO_PARKING);
     state.value("NO_STOPPING", Node::NO_STOPPING);
     state.value("DISABLED", Node::DISABLED);
     state.value("DELETED", Node::DELETED);
@@ -140,8 +139,8 @@ PYBIND11_MODULE(bindings, dpa) {
     node_rtree.def("clearNodes", &NodeRTree::clearNodes);
 
     node_rtree.def("findNode", &NodeRTree::findNode, "position"_a);
-    node_rtree.def("findNearestNode", &NodeRTree::findNearestNode, "position"_a, "criterion"_a);
-    node_rtree.def("findAnyNode", &NodeRTree::findAnyNode, "criterion"_a);
+    node_rtree.def("findNearestNode", &NodeRTree::findNearestNode, "position"_a, "criterion"_a = Node::DISABLED);
+    node_rtree.def("findAnyNode", &NodeRTree::findAnyNode, "criterion"_a = Node::DISABLED);
 
     node_rtree.def("containsNode", &NodeRTree::containsNode, "node"_a);
 
@@ -165,11 +164,9 @@ PYBIND11_MODULE(bindings, dpa) {
             .value("PATH_CONTRACTED", PathSearch::PATH_CONTRACTED)
             .value("DESTINATION_DURATION_NEGATIVE", PathSearch::DESTINATION_DURATION_NEGATIVE)
             .value("DESTINATION_NODE_INVALID", PathSearch::DESTINATION_NODE_INVALID)
-            .value("DESTINATION_NODE_NO_PARKING", PathSearch::DESTINATION_NODE_NO_PARKING)
             .value("DESTINATION_NODE_DUPLICATED", PathSearch::DESTINATION_NODE_DUPLICATED)
             .value("SOURCE_NODE_NOT_PROVIDED", PathSearch::SOURCE_NODE_NOT_PROVIDED)
             .value("SOURCE_NODE_INVALID", PathSearch::SOURCE_NODE_INVALID)
-            .value("SOURCE_NODE_DISABLED", PathSearch::SOURCE_NODE_DISABLED)
             .value("SOURCE_NODE_PRICE_INFINITE", PathSearch::SOURCE_NODE_PRICE_INFINITE)
             .value("CONFIG_AGENT_ID_EMPTY", PathSearch::CONFIG_AGENT_ID_EMPTY)
             .value("CONFIG_COST_LIMIT_NON_POSITIVE", PathSearch::CONFIG_COST_LIMIT_NON_POSITIVE)
@@ -211,7 +208,7 @@ PYBIND11_MODULE(bindings, dpa) {
             .value("SUCCESS", PathSync::SUCCESS)
             .value("REMAINING_DURATION_INFINITE", PathSync::REMAINING_DURATION_INFINITE)
             .value("SOURCE_NODE_OUTBID", PathSync::SOURCE_NODE_OUTBID)
-            .value("DESTINATION_NODE_NO_PARKING", PathSync::DESTINATION_NODE_NO_PARKING)
+            .value("DESTINATION_NODE_STOPPING", PathSync::DESTINATION_NODE_NO_STOPPING)
             .value("VISIT_NODE_INVALID", PathSync::VISIT_NODE_INVALID)
             .value("VISIT_NODE_DISABLED", PathSync::VISIT_NODE_DISABLED)
             .value("VISIT_DURATION_NEGATIVE", PathSync::VISIT_DURATION_NEGATIVE)
