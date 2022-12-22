@@ -148,7 +148,7 @@ PYBIND11_MODULE(bindings, dpa) {
     node_rtree.def("clearNodes", &NodeRTree::clearNodes);
 
     node_rtree.def("findNode", &NodeRTree::findNode, "position"_a);
-    node_rtree.def("findAnyNode", &NodeRTree::findAnyNode, "criteria"_a=Node::DISABLED);
+    node_rtree.def("findAnyNode", &NodeRTree::findAnyNode, "criteria"_a = Node::DISABLED);
     node_rtree.def("findNearestNode",
             static_cast<NodePtr (NodeRTree::*)(Point, Node::State) const>(&NodeRTree::findNearestNode), "position"_a,
             "critera"_a = Node::DISABLED);
@@ -201,11 +201,11 @@ PYBIND11_MODULE(bindings, dpa) {
 
     py::class_<PathSearch::Destination>(dpa, "Destination")
             .def_readwrite("node", &PathSearch::Destination::node)
-            .def_readwrite("cost_penalty", &PathSearch::Destination::cost_penalty)
-            .def_readwrite("duration", &PathSearch::Destination::duration)
             .def_readwrite("queuing", &PathSearch::Destination::queuing)
-            .def(py::init<NodePtr, float, float, bool>(), "node"_a, "cost_penalty"_a = 0, "duration"_a = FLT_MAX,
-                    "queuing"_a = true);
+            .def_readwrite("duration", &PathSearch::Destination::duration)
+            .def_readwrite("cost_penalty", &PathSearch::Destination::cost_penalty)
+            .def(py::init<NodePtr, bool, float, float>(), "node"_a, "queuing"_a = true, "duration"_a = FLT_MAX,
+                    "cost_penalty"_a = 0);
 
     path_search.def(py::init<PathSearch::Config>(), "config"_a);
     path_search.def("getConfig", static_cast<PathSearch::Config& (PathSearch::*) ()>(&PathSearch::getConfig),
