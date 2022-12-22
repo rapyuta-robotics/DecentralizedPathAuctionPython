@@ -90,6 +90,3 @@ def test_path_sync():
     assert len(path_sync.getPaths()) == 1
     assert path_sync.clearPaths() == PathSync.Error.SUCCESS
     assert len(path_sync.getPaths()) == 0
-
-    # print("", file=sys.stderr)
-    # print(node.position.tup(), node.state, file=sys.stderr)
