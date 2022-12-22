@@ -14,6 +14,7 @@ using namespace pybind11::literals;
 using namespace decentralized_path_auction;
 
 PYBIND11_MAKE_OPAQUE(Nodes);
+PYBIND11_MAKE_OPAQUE(PathSearch::Destinations);
 PYBIND11_MAKE_OPAQUE(Path);
 PYBIND11_MAKE_OPAQUE(PathSync::Paths);
 
