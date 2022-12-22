@@ -19,11 +19,7 @@ PYBIND11_MAKE_OPAQUE(Path);
 PYBIND11_MAKE_OPAQUE(PathSync::Paths);
 
 std::ostream& operator<<(std::ostream& os, const Point& p) {
-    os << '(';
-    for (auto x : p) {
-        os << x;
-    }
-    return os << ')';
+    return os << '(' << p[0] << ", " << p[1], ", " << p[2] << ')';
 }
 
 std::ostream& operator<<(std::ostream& os, const PathSync::WaitStatus& w) {
