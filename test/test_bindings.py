@@ -45,7 +45,7 @@ def test_path_search():
     path_search.getConfig().price_increment = 2
     assert path_search.getConfig().price_increment == 2
     assert path_search.getConfig().agent_id == config.agent_id
-    assert path_search.setDestinations(Destinations([Destination(nodes[7])])) == PathSearch.Error.SUCCESS
+    assert path_search.setDestinations([Destination(nodes[7])]) == PathSearch.Error.SUCCESS
     assert nodes[7] in [dst.node for dst in path_search.getDestinations()]
 
     path = Path([Visit(nodes[3])])

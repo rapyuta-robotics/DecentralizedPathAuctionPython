@@ -15,7 +15,6 @@ using namespace pybind11::literals;
 using namespace decentralized_path_auction;
 
 PYBIND11_MAKE_OPAQUE(Nodes);
-PYBIND11_MAKE_OPAQUE(PathSearch::Destinations);
 PYBIND11_MAKE_OPAQUE(Path);
 PYBIND11_MAKE_OPAQUE(PathSync::Paths);
 
@@ -125,7 +124,8 @@ PYBIND11_MODULE(bindings, dpa) {
     node.def_readwrite("state", &Node::state);
     node.def_readwrite("edges", &Node::edges);
     // node.def_readwrite("auction", &Node::auction);
-    node.def_property("custom_data", [](const Node& node) -> size_t { return (size_t) node.custom_data; },
+    node.def_property(
+            "custom_data", [](const Node& node) -> size_t { return (size_t) node.custom_data; },
             [](Node& node, size_t val) { *(size_t*) (&node.custom_data) = val; });
     // node.def("validate", &Node::validate);
 
