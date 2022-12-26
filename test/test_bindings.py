@@ -3,24 +3,11 @@ from decentralized_path_auction_python import *
 import sys
 
 
-def test_point():
-    p = Point(1, 2, 3)
-    assert p.x == 1
-    assert p.y == 2
-    assert p.z == 3
-    p.x = 4
-    p.y = 5
-    p.z = 6
-    assert p.x == 4
-    assert p.y == 5
-    assert p.z == 6
-
-
 def test_graph():
     graph = Graph()
-    pathway = [graph.insertNode(Point(0, 0, 0))]
+    pathway = [graph.insertNode([0, 0, 0, 0])]
     for i in range(1, 10):
-        pos = Point(i, 0, 0)
+        pos = [i, 0, 0, 0]
         node = graph.insertNode(pos)
         assert node
         pathway[-1].edges.append(node)
@@ -32,11 +19,11 @@ def test_graph():
         assert len(node.edges) == 2
 
     for i in range(0, 10):
-        pos = Point(i, 0, 0)
-        assert graph.findNode(pos).position.tup() == pos.tup()
+        pos = [i, 0, 0, 0]
+        assert graph.findNode(pos).position == pos
 
-        pos_offset = Point(i, 10, 0)
-        assert graph.findNearestNode(pos_offset, Node.State.DEFAULT).position.tup() == pos.tup()
+        pos_offset = [i, 10, 0, 0]
+        assert graph.findNearestNode(pos_offset, Node.State.DEFAULT).position == pos
 
         assert graph.removeNode(pos)
         assert not graph.findNode(pos)
@@ -44,9 +31,9 @@ def test_graph():
 
 def test_path_search():
     graph = Graph()
-    nodes = [graph.insertNode(Point(0, 0, 0))]
+    nodes = [graph.insertNode([0, 0, 0, 0])]
     for i in range(1, 10):
-        pos = Point(i, 0, 0)
+        pos = [i, 0, 0, 0]
         node = graph.insertNode(pos)
         assert node
         nodes[-1].edges.append(node)
@@ -58,19 +45,19 @@ def test_path_search():
     path_search.getConfig().price_increment = 2
     assert path_search.getConfig().price_increment == 2
     assert path_search.getConfig().agent_id == config.agent_id
-    assert path_search.setDestinations(Nodes([nodes[7]])) == PathSearch.Error.SUCCESS
-    assert path_search.getDestinations().containsNode(nodes[7])
+    assert path_search.setDestinations([Destination(nodes[7])]) == PathSearch.Error.SUCCESS
+    assert nodes[7] in [dst.node for dst in path_search.getDestinations()]
 
     path = Path([Visit(nodes[3])])
     assert path_search.iterate(path, 100) == PathSearch.Error.SUCCESS
-    assert [visit.node.position.x for visit in path] == list(range(3, 8))
+    assert [visit.node.position[0] for visit in path] == list(range(3, 8))
 
 
 def test_path_sync():
     graph = Graph()
-    nodes = [graph.insertNode(Point(0, 0, 0))]
+    nodes = [graph.insertNode([0, 0, 0, 0])]
     for i in range(1, 10):
-        pos = Point(i, 0, 0)
+        pos = [i, 0, 0, 0]
         node = graph.insertNode(pos)
         assert node
         nodes[-1].edges.append(node)
@@ -103,6 +90,3 @@ def test_path_sync():
     assert len(path_sync.getPaths()) == 1
     assert path_sync.clearPaths() == PathSync.Error.SUCCESS
     assert len(path_sync.getPaths()) == 0
-
-    # print("", file=sys.stderr)
-    # print(node.position.tup(), node.state, file=sys.stderr)
