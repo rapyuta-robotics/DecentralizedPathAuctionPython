@@ -5,6 +5,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/functional.h>
 #include <pybind11/stl_bind.h>
+#include <pybind11/stl.h>
 
 #include <sstream>
 #include <iomanip>
@@ -18,7 +19,7 @@ PYBIND11_MAKE_OPAQUE(Path);
 PYBIND11_MAKE_OPAQUE(PathSync::Paths);
 
 std::ostream& operator<<(std::ostream& os, const Point& p) {
-    return os << '(' << p.get<0>() << ", " << p.get<1>() << ", " << p.get<2>() << ")";
+    return os << '(' << p[0] << ", " << p[1] << ", " << p[2] << ')';
 }
 
 std::ostream& operator<<(std::ostream& os, const PathSync::WaitStatus& w) {
@@ -88,17 +89,9 @@ PYBIND11_MODULE(bindings, dpa) {
 
     // container bindings
     py::bind_vector<Nodes>(dpa, "Nodes");
+    py::bind_vector<PathSearch::Destinations>(dpa, "Destinations");
     py::bind_vector<Path>(dpa, "Path").def("__str__", &to_string<Path>);
     py::bind_map<PathSync::Paths>(dpa, "Paths");
-
-    // Point
-    py::class_<Point> point(dpa, "Point");
-    point.def(py::init<float const&, float const&, float const&>(), "x"_a = 0, "y"_a = 0, "z"_a = 0);
-    point.def_property("x", &Point::get<0>, &Point::set<0>);
-    point.def_property("y", &Point::get<1>, &Point::set<1>);
-    point.def_property("z", &Point::get<2>, &Point::set<2>);
-    point.def("tup", [](const Point& p) { return std::make_tuple(p.get<0>(), p.get<1>(), p.get<2>()); });
-    point.def("__str__", &to_string<Point>);
 
     // Node
     py::class_<Node, NodePtr> node(dpa, "Node");
@@ -133,14 +126,15 @@ PYBIND11_MODULE(bindings, dpa) {
     // NodeRTree
     py::class_<NodeRTree> node_rtree(dpa, "NodeRTree");
     node_rtree.def(py::init<>());
-    node_rtree.def("insertNode", &NodeRTree::insertNode, "node"_a);
+    node_rtree.def("insertNode", &NodeRTree::insertNode, "node"_a, "cost"_a = 0);
     node_rtree.def("removeNode", &NodeRTree::removeNode, "node"_a);
     node_rtree.def("clearNodes", &NodeRTree::clearNodes);
 
     node_rtree.def("findNode", &NodeRTree::findNode, "position"_a);
-    node_rtree.def("findNearestNode", &NodeRTree::findNearestNode, "position"_a, "criterion"_a = Node::DISABLED);
-    node_rtree.def("findAnyNode", &NodeRTree::findAnyNode, "criterion"_a = Node::DISABLED);
-
+    node_rtree.def("findAnyNode", &NodeRTree::findAnyNode, "criteria"_a = Node::DISABLED);
+    node_rtree.def("findNearestNode",
+            static_cast<NodePtr (NodeRTree::*)(Point, Node::State) const>(&NodeRTree::findNearestNode), "position"_a,
+            "criteria"_a = Node::DISABLED);
     node_rtree.def("containsNode", &NodeRTree::containsNode, "node"_a);
 
     // Graph
@@ -161,7 +155,9 @@ PYBIND11_MODULE(bindings, dpa) {
             .value("ITERATIONS_REACHED", PathSearch::ITERATIONS_REACHED)
             .value("PATH_EXTENDED", PathSearch::PATH_EXTENDED)
             .value("PATH_CONTRACTED", PathSearch::PATH_CONTRACTED)
+            .value("DESTINATION_COST_PENALTY_NEGATIVE", PathSearch::DESTINATION_COST_PENALTY_NEGATIVE)
             .value("DESTINATION_DURATION_NEGATIVE", PathSearch::DESTINATION_DURATION_NEGATIVE)
+            .value("DESTINATION_NODE_DISABLED", PathSearch::DESTINATION_NODE_DISABLED)
             .value("DESTINATION_NODE_INVALID", PathSearch::DESTINATION_NODE_INVALID)
             .value("DESTINATION_NODE_DUPLICATED", PathSearch::DESTINATION_NODE_DUPLICATED)
             .value("SOURCE_NODE_NOT_PROVIDED", PathSearch::SOURCE_NODE_NOT_PROVIDED)
@@ -185,12 +181,20 @@ PYBIND11_MODULE(bindings, dpa) {
                     "travel_time"_a = PathSearch::TravelTime(PathSearch::travelDistance))
             .def("validate", &PathSearch::Config::validate);
 
+    py::class_<PathSearch::Destination>(dpa, "Destination")
+            .def_readwrite("node", &PathSearch::Destination::node)
+            .def_readwrite("queuing", &PathSearch::Destination::queuing)
+            .def_readwrite("duration", &PathSearch::Destination::duration)
+            .def_readwrite("cost_penalty", &PathSearch::Destination::cost_penalty)
+            .def(py::init<NodePtr, bool, float, float>(), "node"_a, "queuing"_a = true, "duration"_a = FLT_MAX,
+                    "cost_penalty"_a = 0);
+
     path_search.def(py::init<PathSearch::Config>(), "config"_a);
     path_search.def("getConfig", static_cast<PathSearch::Config& (PathSearch::*) ()>(&PathSearch::getConfig),
             py::return_value_policy::reference);
 
     path_search.def("getDestinations", &PathSearch::getDestinations);
-    path_search.def("setDestinations", &PathSearch::setDestinations, "destinations"_a, "duration"_a = FLT_MAX);
+    path_search.def("setDestinations", &PathSearch::setDestinations, "destinations"_a);
 
     path_search.def("selectSource", &PathSearch::selectSource, "sources"_a);
     path_search.def("iterate", static_cast<PathSearch::Error (PathSearch::*)(Path&, size_t)>(&PathSearch::iterate),
