@@ -67,10 +67,10 @@ def test_path_sync():
     path_a = Path([Visit(n, price=1) for n in nodes])
     path_b = Path([Visit(n, price=2) for n in nodes[6:]])
     path_sync = PathSync()
-    assert path_sync.updatePath("A", path_a, path_id=0) == PathSync.Error.SUCCESS
-    assert path_sync.updatePath("B", path_b, path_id=0) == PathSync.Error.SUCCESS
+    assert path_sync.updatePath("A", path_id=0, path=path_a) == PathSync.Error.SUCCESS
+    assert path_sync.updatePath("B", path_id=0, path=path_b) == PathSync.Error.SUCCESS
     assert (
-        path_sync.updateProgress("A", progress_min=2, progress_max=3, path_id=0)
+        path_sync.updateProgress("A", path_id=0, progress_min=2, progress_max=3)
         == PathSync.Error.SUCCESS
     )
     info_a = path_sync.getPaths()["A"]

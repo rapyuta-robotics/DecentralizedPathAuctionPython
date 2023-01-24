@@ -107,8 +107,7 @@ PYBIND11_MODULE(bindings, dpa) {
     node.def_readwrite("state", &Node::state);
     node.def_readwrite("edges", &Node::edges);
     // node.def_readwrite("auction", &Node::auction);
-    node.def_property(
-            "custom_data", [](const Node& node) -> size_t { return (size_t) node.custom_data; },
+    node.def_property("custom_data", [](const Node& node) -> size_t { return (size_t) node.custom_data; },
             [](Node& node, size_t val) { *(size_t*) (&node.custom_data) = val; });
     // node.def("validate", &Node::validate);
 
@@ -211,16 +210,16 @@ PYBIND11_MODULE(bindings, dpa) {
             .value("SUCCESS", PathSync::SUCCESS)
             .value("REMAINING_DURATION_INFINITE", PathSync::REMAINING_DURATION_INFINITE)
             .value("SOURCE_NODE_OUTBID", PathSync::SOURCE_NODE_OUTBID)
-            .value("DESTINATION_NODE_NO_STOPPING", PathSync::DESTINATION_NODE_NO_STOPPING)
+            .value("PATH_CAUSES_CYCLE", PathSync::PATH_CAUSES_CYCLE)
+            .value("VISIT_PRICE_CONFLICT", PathSync::VISIT_PRICE_CONFLICT)
             .value("VISIT_NODE_INVALID", PathSync::VISIT_NODE_INVALID)
             .value("VISIT_NODE_DISABLED", PathSync::VISIT_NODE_DISABLED)
             .value("VISIT_DURATION_NEGATIVE", PathSync::VISIT_DURATION_NEGATIVE)
-            .value("VISIT_PRICE_ALREADY_EXIST", PathSync::VISIT_PRICE_ALREADY_EXIST)
             .value("VISIT_PRICE_LESS_THAN_START_PRICE", PathSync::VISIT_PRICE_LESS_THAN_START_PRICE)
             .value("VISIT_BID_ALREADY_REMOVED", PathSync::VISIT_BID_ALREADY_REMOVED)
             .value("PATH_EMPTY", PathSync::PATH_EMPTY)
-            .value("PATH_VISIT_DUPLICATED", PathSync::PATH_VISIT_DUPLICATED)
-            .value("PATH_CAUSES_CYCLE", PathSync::PATH_CAUSES_CYCLE)
+            .value("PATH_NODE_REPEATED", PathSync::PATH_NODE_REPEATED)
+            .value("PATH_BID_DUPLICATED", PathSync::PATH_BID_DUPLICATED)
             .value("PATH_ID_STALE", PathSync::PATH_ID_STALE)
             .value("PATH_ID_MISMATCH", PathSync::PATH_ID_MISMATCH)
             .value("AGENT_ID_EMPTY", PathSync::AGENT_ID_EMPTY)
@@ -228,7 +227,7 @@ PYBIND11_MODULE(bindings, dpa) {
             .value("PROGRESS_DECREASE_DENIED", PathSync::PROGRESS_DECREASE_DENIED)
             .value("PROGRESS_EXCEED_PATH_SIZE", PathSync::PROGRESS_EXCEED_PATH_SIZE)
             .value("PROGRESS_MIN_EXCEED_MAX", PathSync::PROGRESS_MIN_EXCEED_MAX)
-            .value("PROGRESS_RANGE_CONFLICT", PathSync::PROGRESS_RANGE_CONFLICT)
+            .value("PROGRESS_NODE_LOOPBACK", PathSync::PROGRESS_NODE_LOOPBACK)
             .export_values();
 
     py::class_<PathSync::PathInfo>(path_sync, "PathInfo")
@@ -246,9 +245,9 @@ PYBIND11_MODULE(bindings, dpa) {
             .def_readwrite("remaining_duration", &PathSync::WaitStatus::remaining_duration)
             .def("__str__", &to_string<PathSync::WaitStatus>);
     path_sync.def(py::init<>());
-    path_sync.def("updatePath", &PathSync::updatePath, "agent_id"_a, "path"_a, "path_id"_a);
-    path_sync.def(
-            "updateProgress", &PathSync::updateProgress, "agent_id"_a, "progress_min"_a, "progress_max"_a, "path_id"_a);
+    path_sync.def("updatePath", &PathSync::updatePath, "agent_id"_a, "path_id"_a, "path"_a);
+    path_sync.def("updateProgress", &PathSync::updateProgress, "agent_id"_a, "path_id"_a, "progress_min"_a,
+            "progress_max"_a, "price"_a = FLT_MAX);
     path_sync.def("removePath", &PathSync::removePath, "agent_id"_a);
     path_sync.def("clearPaths", &PathSync::clearPaths);
     path_sync.def("getPaths", &PathSync::getPaths, py::return_value_policy::reference);
