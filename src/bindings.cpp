@@ -210,7 +210,6 @@ PYBIND11_MODULE(bindings, dpa) {
             .value("SUCCESS", PathSync::SUCCESS)
             .value("REMAINING_DURATION_INFINITE", PathSync::REMAINING_DURATION_INFINITE)
             .value("SOURCE_NODE_OUTBID", PathSync::SOURCE_NODE_OUTBID)
-            .value("PATH_CAUSES_CYCLE", PathSync::PATH_CAUSES_CYCLE)
             .value("VISIT_PRICE_CONFLICT", PathSync::VISIT_PRICE_CONFLICT)
             .value("VISIT_NODE_INVALID", PathSync::VISIT_NODE_INVALID)
             .value("VISIT_NODE_DISABLED", PathSync::VISIT_NODE_DISABLED)
