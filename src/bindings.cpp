@@ -24,7 +24,7 @@ std::ostream& operator<<(std::ostream& os, const Point& p) {
 
 std::ostream& operator<<(std::ostream& os, const PathSync::WaitStatus& w) {
     return os << "{ error: " << w.error << ", blocked_progress: " << w.blocked_progress
-              << ", remaining_duration: " << w.remaining_duration << " }";
+              << ", blocked_by: " << w.blocked_by << ", remaining_duration: " << w.remaining_duration << " }";
 }
 
 struct PathProgress {
