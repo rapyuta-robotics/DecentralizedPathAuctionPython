@@ -106,6 +106,7 @@ PYBIND11_MODULE(bindings, dpa) {
     node.def_readonly("position", &Node::position);
     node.def_readwrite("state", &Node::state);
     node.def_readwrite("edges", &Node::edges);
+    node.def_readwrite("reverse_edges", &Node::reverse_edges);
     // node.def_readwrite("auction", &Node::auction);
     node.def_property("custom_data", [](const Node& node) -> size_t { return (size_t) node.custom_data; },
             [](Node& node, size_t val) { *(size_t*) (&node.custom_data) = val; });
@@ -139,6 +140,7 @@ PYBIND11_MODULE(bindings, dpa) {
     // Graph
     py::class_<Graph, NodeRTree> graph(dpa, "Graph");
     graph.def(py::init<>());
+    graph.def("updateReverseEdges", &Graph::updateReverseEdges);
     graph.def("clearNodes", &Graph::clearNodes);
     graph.def("removeNode", static_cast<bool (Graph::*)(NodePtr)>(&Graph::removeNode), "node"_a);
     graph.def("removeNode", static_cast<bool (Graph::*)(Point)>(&Graph::removeNode), "node"_a);
@@ -152,6 +154,7 @@ PYBIND11_MODULE(bindings, dpa) {
             .value("FALLBACK_DIVERTED", PathSearch::FALLBACK_DIVERTED)
             .value("COST_LIMIT_EXCEEDED", PathSearch::COST_LIMIT_EXCEEDED)
             .value("ITERATIONS_REACHED", PathSearch::ITERATIONS_REACHED)
+            .value("PATH_NOT_FOUND", PathSearch::PATH_NOT_FOUND)
             .value("PATH_EXTENDED", PathSearch::PATH_EXTENDED)
             .value("PATH_CONTRACTED", PathSearch::PATH_CONTRACTED)
             .value("DESTINATION_COST_PENALTY_NEGATIVE", PathSearch::DESTINATION_COST_PENALTY_NEGATIVE)
@@ -195,6 +198,8 @@ PYBIND11_MODULE(bindings, dpa) {
 
     path_search.def("getDestinations", &PathSearch::getDestinations);
     path_search.def("setDestinations", &PathSearch::setDestinations, "destinations"_a);
+    path_search.def("initializePathCostEstimates", &PathSearch::initializePathCostEstimates, "source"_a = nullptr,
+            "iterations"_a = 0);
 
     path_search.def("selectSource", &PathSearch::selectSource, "sources"_a);
     path_search.def("iterate", static_cast<PathSearch::Error (PathSearch::*)(Path&, size_t)>(&PathSearch::iterate),
