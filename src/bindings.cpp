@@ -174,10 +174,11 @@ PYBIND11_MODULE(bindings, dpa) {
             .def_readwrite("cost_limit", &PathSearch::Config::cost_limit)
             .def_readwrite("price_increment", &PathSearch::Config::price_increment)
             .def_readwrite("time_exchange_rate", &PathSearch::Config::time_exchange_rate)
+            .def_readwrite("bid_cost_inflation", &PathSearch::Config::bid_cost_inflation)
             .def_readwrite("travel_time", &PathSearch::Config::travel_time)
-            .def(py::init<std::string, float, float, float, PathSearch::TravelTime>(), "agent_id"_a,
+            .def(py::init<std::string, float, float, float, float, PathSearch::TravelTime>(), "agent_id"_a,
                     "cost_limit"_a = FLT_MAX, "price_increment"_a = 1, "time_exchange_rate"_a = 1,
-                    "travel_time"_a = PathSearch::TravelTime(PathSearch::travelDistance))
+                    "bid_cost_inflation"_a = 1, "travel_time"_a = PathSearch::TravelTime(PathSearch::travelDistance))
             .def("validate", &PathSearch::Config::validate);
 
     py::class_<PathSearch::Destination>(dpa, "Destination")
