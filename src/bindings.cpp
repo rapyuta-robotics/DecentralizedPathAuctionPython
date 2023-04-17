@@ -255,6 +255,6 @@ PYBIND11_MODULE(bindings, dpa) {
     path_sync.def("removePath", &PathSync::removePath, "agent_id"_a);
     path_sync.def("clearPaths", &PathSync::clearPaths);
     path_sync.def("getPaths", &PathSync::getPaths, py::return_value_policy::reference);
-    path_sync.def("checkWaitStatus", &PathSync::checkWaitStatus, "agent_id"_a);
+    path_sync.def("checkWaitStatus", &PathSync::checkWaitStatus, "agent_id"_a, "patience"_a = FLT_MAX);
     path_sync.def("__str__", &to_string<PathSync>);
 }
