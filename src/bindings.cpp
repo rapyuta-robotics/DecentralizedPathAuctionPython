@@ -108,7 +108,8 @@ PYBIND11_MODULE(bindings, dpa) {
     node.def_readwrite("edges", &Node::edges);
     node.def_readwrite("reverse_edges", &Node::reverse_edges);
     // node.def_readwrite("auction", &Node::auction);
-    node.def_property("custom_data", [](const Node& node) -> size_t { return (size_t) node.custom_data; },
+    node.def_property(
+            "custom_data", [](const Node& node) -> size_t { return (size_t) node.custom_data; },
             [](Node& node, size_t val) { *(size_t*) (&node.custom_data) = val; });
     // node.def("validate", &Node::validate);
 
@@ -239,8 +240,9 @@ PYBIND11_MODULE(bindings, dpa) {
             .def_readwrite("path_id", &PathSync::PathInfo::path_id)
             .def_readwrite("progress_min", &PathSync::PathInfo::progress_min)
             .def_readwrite("progress_max", &PathSync::PathInfo::progress_max)
-            .def(py::init<Path, size_t, size_t, size_t>(), "path"_a, "path_id"_a = 0, "progress_min"_a = 0,
-                    "progress_max"_a = 0);
+            .def_readwrite("stationary_block", &PathSync::PathInfo::stationary_block)
+            .def(py::init<Path, size_t, size_t, size_t, bool>(), "path"_a, "path_id"_a = 0, "progress_min"_a = 0,
+                    "progress_max"_a = 0, "stationary_block"_a = true);
 
     py::class_<PathSync::WaitStatus>(path_sync, "WaitStatus")
             .def_readwrite("error", &PathSync::WaitStatus::error)
@@ -249,12 +251,14 @@ PYBIND11_MODULE(bindings, dpa) {
             .def_readwrite("remaining_duration", &PathSync::WaitStatus::remaining_duration)
             .def("__str__", &to_string<PathSync::WaitStatus>);
     path_sync.def(py::init<>());
-    path_sync.def("updatePath", &PathSync::updatePath, "agent_id"_a, "path_id"_a, "path"_a);
+    path_sync.def(
+            "updatePath", &PathSync::updatePath, "agent_id"_a, "path_id"_a, "path"_a, "stationary_block"_a = true);
     path_sync.def("updateProgress", &PathSync::updateProgress, "agent_id"_a, "path_id"_a, "progress_min"_a,
-            "progress_max"_a, "price"_a = FLT_MAX);
+            "progress_max"_a, "price"_a = FLT_MAX, "duration"_a = 0);
     path_sync.def("removePath", &PathSync::removePath, "agent_id"_a);
     path_sync.def("clearPaths", &PathSync::clearPaths);
     path_sync.def("getPaths", &PathSync::getPaths, py::return_value_policy::reference);
-    path_sync.def("checkWaitStatus", &PathSync::checkWaitStatus, "agent_id"_a, "patience"_a = FLT_MAX);
+    path_sync.def("checkWaitStatus", &PathSync::checkWaitStatus, "agent_id"_a, "patience"_a = FLT_MAX,
+            "force_stationary_block"_a = false);
     path_sync.def("__str__", &to_string<PathSync>);
 }
