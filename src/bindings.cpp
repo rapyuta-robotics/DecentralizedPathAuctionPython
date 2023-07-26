@@ -240,9 +240,8 @@ PYBIND11_MODULE(bindings, dpa) {
             .def_readwrite("path_id", &PathSync::PathInfo::path_id)
             .def_readwrite("progress_min", &PathSync::PathInfo::progress_min)
             .def_readwrite("progress_max", &PathSync::PathInfo::progress_max)
-            .def_readwrite("stationary_block", &PathSync::PathInfo::stationary_block)
-            .def(py::init<Path, size_t, size_t, size_t, bool>(), "path"_a, "path_id"_a = 0, "progress_min"_a = 0,
-                    "progress_max"_a = 0, "stationary_block"_a = true);
+            .def(py::init<Path, size_t, size_t, size_t>(), "path"_a, "path_id"_a = 0, "progress_min"_a = 0,
+                    "progress_max"_a = 0);
 
     py::class_<PathSync::WaitStatus>(path_sync, "WaitStatus")
             .def_readwrite("error", &PathSync::WaitStatus::error)
@@ -252,7 +251,7 @@ PYBIND11_MODULE(bindings, dpa) {
             .def("__str__", &to_string<PathSync::WaitStatus>);
     path_sync.def(py::init<>());
     path_sync.def(
-            "updatePath", &PathSync::updatePath, "agent_id"_a, "path_id"_a, "path"_a, "stationary_block"_a = true);
+            "updatePath", &PathSync::updatePath, "agent_id"_a, "path_id"_a, "path"_a);
     path_sync.def("updateProgress", &PathSync::updateProgress, "agent_id"_a, "path_id"_a, "progress_min"_a,
             "progress_max"_a, "price"_a = FLT_MAX, "duration"_a = 0);
     path_sync.def("removePath", &PathSync::removePath, "agent_id"_a);
