@@ -56,6 +56,10 @@ std::ostream& operator<<(std::ostream& os, const Path& p) {
 
 std::ostream& operator<<(std::ostream& os, const PathSync& p) {
     for (const auto& [agent_id, info] : p.getPaths()) {
+        // skip single node paths for brevity
+        if (info.path.size() <= 1) {
+            continue;
+        }
         auto wait_status = p.checkWaitStatus(agent_id);
         os << agent_id << "    pid " << info.path_id << "    len " << info.path.size();
 
