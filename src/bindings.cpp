@@ -225,7 +225,6 @@ PYBIND11_MODULE(bindings, dpa) {
             .value("VISIT_DURATION_NEGATIVE", PathSync::VISIT_DURATION_NEGATIVE)
             .value("VISIT_PRICE_LESS_THAN_START_PRICE", PathSync::VISIT_PRICE_LESS_THAN_START_PRICE)
             .value("VISIT_BID_ALREADY_REMOVED", PathSync::VISIT_BID_ALREADY_REMOVED)
-            .value("PATH_EMPTY", PathSync::PATH_EMPTY)
             .value("PATH_NODE_REPEATED", PathSync::PATH_NODE_REPEATED)
             .value("PATH_BID_DUPLICATED", PathSync::PATH_BID_DUPLICATED)
             .value("PATH_ID_STALE", PathSync::PATH_ID_STALE)
