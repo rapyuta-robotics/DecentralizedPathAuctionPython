@@ -2,13 +2,13 @@
 #include <decentralized_path_auction/path_search.hpp>
 #include <decentralized_path_auction/path_sync.hpp>
 
-#include <pybind11/pybind11.h>
 #include <pybind11/functional.h>
-#include <pybind11/stl_bind.h>
+#include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
 
-#include <sstream>
 #include <iomanip>
+#include <sstream>
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -215,6 +215,7 @@ PYBIND11_MODULE(bindings, dpa) {
             .value("SUCCESS", PathSync::SUCCESS)
             .value("REMAINING_DURATION_INFINITE", PathSync::REMAINING_DURATION_INFINITE)
             .value("SOURCE_NODE_OUTBID", PathSync::SOURCE_NODE_OUTBID)
+            .value("NODE_NOT_ADJACENT", PathSync::NODE_NOT_ADJACENT)
             .value("VISIT_PRICE_CONFLICT", PathSync::VISIT_PRICE_CONFLICT)
             .value("VISIT_NODE_INVALID", PathSync::VISIT_NODE_INVALID)
             .value("VISIT_NODE_DISABLED", PathSync::VISIT_NODE_DISABLED)
