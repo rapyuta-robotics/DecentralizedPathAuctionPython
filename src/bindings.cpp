@@ -208,7 +208,14 @@ PYBIND11_MODULE(bindings, dpa) {
     path_search.def("iterate", static_cast<PathSearch::Error (PathSearch::*)(Path&, size_t)>(&PathSearch::iterate),
             "path"_a, "iterations"_a = 0);
     path_search.def("iterate",
-            static_cast<PathSearch::Error (PathSearch::*)(Path&, size_t, float)>(&PathSearch::iterate), "path"_a,
+            static_cast<PathSearch::Error (PathSearch::*)(Path&, size_t, float, bool)>(&PathSearch::iterate), "path"_a,
+            "iterations"_a, "fallback_cost"_a, "astar"_a);
+
+    path_search.def("iterateAstar",
+            static_cast<PathSearch::Error (PathSearch::*)(Path&, size_t)>(&PathSearch::iterateAstar), "path"_a,
+            "iterations"_a = 0);
+    path_search.def("iterateAstar",
+            static_cast<PathSearch::Error (PathSearch::*)(Path&, size_t, float)>(&PathSearch::iterateAstar), "path"_a,
             "iterations"_a, "fallback_cost"_a);
     path_search.def("resetCostEstimates", &PathSearch::resetCostEstimates);
 
@@ -254,8 +261,7 @@ PYBIND11_MODULE(bindings, dpa) {
             .def_readwrite("remaining_duration", &PathSync::WaitStatus::remaining_duration)
             .def("__str__", &to_string<PathSync::WaitStatus>);
     path_sync.def(py::init<>());
-    path_sync.def(
-            "updatePath", &PathSync::updatePath, "agent_id"_a, "path_id"_a, "path"_a);
+    path_sync.def("updatePath", &PathSync::updatePath, "agent_id"_a, "path_id"_a, "path"_a);
     path_sync.def("updateProgress", &PathSync::updateProgress, "agent_id"_a, "path_id"_a, "progress_min"_a,
             "progress_max"_a, "price"_a = FLT_MAX, "duration"_a = 0);
     path_sync.def("removePath", &PathSync::removePath, "agent_id"_a);
