@@ -225,6 +225,7 @@ PYBIND11_MODULE(bindings, dpa) {
     py::enum_<PathSync::Error>(path_sync, "Error")
             .value("SUCCESS", PathSync::SUCCESS)
             .value("REMAINING_DURATION_INFINITE", PathSync::REMAINING_DURATION_INFINITE)
+            .value("PATH_CYCLE_DETECTED", PathSync::PATH_CYCLE_DETECTED)
             .value("SOURCE_NODE_OUTBID", PathSync::SOURCE_NODE_OUTBID)
             .value("NODE_NOT_ADJACENT", PathSync::NODE_NOT_ADJACENT)
             .value("VISIT_PRICE_CONFLICT", PathSync::VISIT_PRICE_CONFLICT)
