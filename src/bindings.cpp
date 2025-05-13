@@ -135,12 +135,12 @@ PYBIND11_MODULE(bindings, dpa) {
     node_rtree.def("removeNode", &NodeRTree::removeNode, "node"_a);
     node_rtree.def("clearNodes", &NodeRTree::clearNodes);
 
-    node_rtree.def("findNode", &NodeRTree::findNode, "position"_a);
+    node_rtree.def("findNode", &NodeRTree::findNode, "position"_a, "exact_cost"_a = true);
     node_rtree.def("findAnyNode", &NodeRTree::findAnyNode, "criteria"_a = Node::DISABLED);
     node_rtree.def("findNearestNode",
             static_cast<NodePtr (NodeRTree::*)(Point, Node::State) const>(&NodeRTree::findNearestNode), "position"_a,
             "criteria"_a = Node::DISABLED);
-    node_rtree.def("containsNode", &NodeRTree::containsNode, "node"_a);
+    node_rtree.def("containsNode", &NodeRTree::containsNode, "node"_a, "exact_cost"_a = true);
 
     // Graph
     py::class_<Graph, NodeRTree> graph(dpa, "Graph");
