@@ -1,6 +1,7 @@
 #include <decentralized_path_auction/graph.hpp>
 #include <decentralized_path_auction/path_search.hpp>
 #include <decentralized_path_auction/path_sync.hpp>
+#include <decentralized_path_auction/state_save.hpp>
 
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
@@ -258,4 +259,7 @@ PYBIND11_MODULE(bindings, dpa) {
     path_sync.def("getPaths", &PathSync::getPaths, py::return_value_policy::reference);
     path_sync.def("checkWaitStatus", &PathSync::checkWaitStatus, "agent_id"_a, "patience"_a = FLT_MAX);
     path_sync.def("__str__", &to_string<PathSync>);
+
+    dpa.def("toJson", static_cast<std::string (*)(const Graph&)>(&toJson), "graph"_a);
+    dpa.def("toJson", static_cast<std::string (*)(const PathSync&)>(&toJson), "path_sync"_a);
 }
