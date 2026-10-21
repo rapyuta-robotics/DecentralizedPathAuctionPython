@@ -264,13 +264,16 @@ PYBIND11_MODULE(bindings, dpa) {
             .def("__str__", &to_string<PathSync::WaitStatus>);
     path_sync.def(py::init<>());
     path_sync.def("updatePath", &PathSync::updatePath, "agent_id"_a, "path_id"_a, "path"_a);
+    // PathSync::updateProgress takes 5 parameters; "duration" was dropped from the C++
+    // API in DecentralizedPathAuction 434971e and the binding was never updated.
     path_sync.def("updateProgress", &PathSync::updateProgress, "agent_id"_a, "path_id"_a, "progress_min"_a,
-            "progress_max"_a, "price"_a = FLT_MAX, "duration"_a = 0);
+            "progress_max"_a, "price"_a = FLT_MAX);
     path_sync.def("removePath", &PathSync::removePath, "agent_id"_a);
     path_sync.def("clearPaths", &PathSync::clearPaths);
     path_sync.def("getPaths", &PathSync::getPaths, py::return_value_policy::reference);
-    path_sync.def("checkWaitStatus", &PathSync::checkWaitStatus, "agent_id"_a, "patience"_a = FLT_MAX,
-            "force_stationary_block"_a = false);
+    // PathSync::checkWaitStatus takes 2 parameters; "force_stationary_block" is not one
+    // of them.
+    path_sync.def("checkWaitStatus", &PathSync::checkWaitStatus, "agent_id"_a, "patience"_a = FLT_MAX);
     path_sync.def("__str__", &to_string<PathSync>);
 
     dpa.def("toJson", static_cast<std::string (*)(const Graph&)>(&toJson), "graph"_a);

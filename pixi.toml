@@ -1,0 +1,12 @@
+[package]
+name = "ros-noetic-decentralized-path-auction-python"
+version = "0.0.0"
+license = "LicenseRef-Proprietary"
+publish = true
+
+[package.build]
+backend = { name = "pixi-build-ros", version = "*" }
+
+[package.build.config]
+distro = "noetic"
+extra-package-mappings = [{ path = "robostack_mappings.yaml" }]
